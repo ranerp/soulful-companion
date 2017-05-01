@@ -1,0 +1,13 @@
+timer:
+  idle:
+    time: 60
+    start_actvity: 0.05
+color:
+  start:
+    r: 255
+    g: 255
+    b: 255
+  end:
+    r: 0
+    g: 100
+    b: 0
