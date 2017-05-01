@@ -1,12 +1,13 @@
-timer:
+---
+timer: 
   run_duration: 60
-  start_activity_percent: 0.05
-color:
-  start:
+  start_activity_percent: 0.05000000074505806
+color: 
+  start: 
     r: 255
     g: 255
     b: 255
-  end:
+  end: 
     r: 0
     g: 100
     b: 0

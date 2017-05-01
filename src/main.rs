@@ -7,7 +7,7 @@ use soulful_companion::color::rgb::Rgb;
 use soulful_companion::config::config;
 
 fn main() {
-    let config: config::Config = config::load();
+    let mut config: config::Config = config::load();
 
     let hsl = color_converter::rgb_to_hsl(Rgb::new(255, 0, 0));
     let hsl2 = color_converter::rgb_to_hsl(Rgb::new(0, 255, 0));

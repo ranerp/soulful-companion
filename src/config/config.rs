@@ -49,6 +49,13 @@ pub fn load() -> Config {
     }
 }
 
+pub fn save(config: &Config) -> Result<String, ConfigError> {
+    match serde_yaml::to_string(&config) {
+        Ok(ref str) => return io::save_str_to_file(str, CONF_FILE_PATH).map_err(ConfigError::Save),
+        Err(err) => return Err(ConfigError::Serialize(err)),
+    }
+}
+
 fn load_yaml_config(file_path: &str) -> Result<Config, ConfigError> {
     match io::load_file_to_str(file_path) {
         Ok(ref str) => return serde_yaml::from_str::<Config>(str).map_err(ConfigError::Deserialize),
