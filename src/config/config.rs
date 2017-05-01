@@ -25,16 +25,6 @@ pub struct Config {
 }
 
 impl Config {
-    pub fn new() -> Config {
-        match load_config() {
-            Ok(config) => return config,
-            Err(err) => {
-                println!("{}.\nLoading default configuration.", err);
-                return Config::default()
-            }
-        }
-    }
-
     fn default() -> Config {
         Config {
             timer: TimerConfig {
@@ -49,8 +39,18 @@ impl Config {
     }
 }
 
-fn load_config() -> Result<Config, ConfigError> {
-    match io::load_file_to_str(CONF_FILE_PATH) {
+pub fn load() -> Config {
+    match load_yaml_config(CONF_FILE_PATH) {
+        Ok(config) => return config,
+        Err(err) => {
+            println!("{}.\nLoading default configuration.", err);
+            return Config::default()
+        },
+    }
+}
+
+fn load_yaml_config(file_path: &str) -> Result<Config, ConfigError> {
+    match io::load_file_to_str(file_path) {
         Ok(ref str) => return serde_yaml::from_str::<Config>(str).map_err(ConfigError::Deserialize),
         Err(err) => return Err(ConfigError::Load(err)),
     }

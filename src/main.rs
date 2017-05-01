@@ -4,9 +4,10 @@ extern crate chrono;
 
 use soulful_companion::color::color_converter;
 use soulful_companion::color::rgb::Rgb;
-use soulful_companion::config::config::Config;
+use soulful_companion::config::config;
 
 fn main() {
+    let config: config::Config = config::load();
 
     let hsl = color_converter::rgb_to_hsl(Rgb::new(255, 0, 0));
     let hsl2 = color_converter::rgb_to_hsl(Rgb::new(0, 255, 0));
@@ -20,8 +21,6 @@ fn main() {
     println!("{:?}", hsl);
     println!("{:?}", hsl3);
     println!("{:?}", rgb);
-
-    let config: Config = Config::new();
 
     println!("{:?}", config.color.start);
     println!("{:?}", config.color.end);
