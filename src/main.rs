@@ -1,10 +1,9 @@
 extern crate soulful_companion;
-extern crate timer;
-extern crate chrono;
 
 use soulful_companion::color::color_converter;
 use soulful_companion::color::rgb::Rgb;
 use soulful_companion::config::config;
+use soulful_companion::time::action_timer::ActionTimer;
 
 fn main() {
     let mut config: config::Config = config::load();
@@ -22,6 +21,5 @@ fn main() {
     println!("{:?}", hsl3);
     println!("{:?}", rgb);
 
-    println!("{:?}", config.color.start);
-    println!("{:?}", config.color.end);
+    ActionTimer::schedule();
 }

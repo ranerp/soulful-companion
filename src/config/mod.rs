@@ -1,11 +1,9 @@
 pub mod config;
 
-extern crate serde_yaml;
-
 use std::error::Error;
 use std::fmt;
 
-use self::serde_yaml::Error as SerdeError;
+use serde_yaml::Error as SerdeError;
 
 use io::IoError;
 

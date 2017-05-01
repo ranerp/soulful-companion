@@ -1,8 +1,7 @@
-extern crate serde_yaml;
-
 use io::io;
 use config::ConfigError;
 use color::rgb::Rgb;
+use serde_yaml;
 
 const CONF_FILE_PATH: &'static str = "resources/conf.yaml";
 
