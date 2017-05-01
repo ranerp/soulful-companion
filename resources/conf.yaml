@@ -1,7 +1,6 @@
 timer:
-  idle:
-    time: 60
-    start_actvity: 0.05
+  run_duration: 60
+  start_activity_percent: 0.05
 color:
   start:
     r: 255

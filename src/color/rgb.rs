@@ -1,6 +1,6 @@
 use std::ops::{Sub, Add, Mul};
 
-#[derive(Debug)]
+#[derive(Debug, Serialize, Deserialize)]
 pub struct Rgb {
     pub r: u8,
     pub g: u8,
