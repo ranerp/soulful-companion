@@ -1,4 +1,9 @@
 extern crate soulful_companion;
+extern crate timer;
+
+use timer::Timer;
+use std::thread;
+use std::time::Duration;
 
 use soulful_companion::color::color_converter;
 use soulful_companion::color::rgb::Rgb;
@@ -21,5 +26,14 @@ fn main() {
     println!("{:?}", hsl3);
     println!("{:?}", rgb);
 
-    ActionTimer::schedule();
+    let mut timer = ActionTimer::new(Timer::new());
+    timer.schedule(|| println!("1 {:?}", do_something()));
+
+    thread::sleep(Duration::from_secs(10));
+
+    timer.schedule(|| do_something());
+}
+
+fn do_something() {
+    println!("doing something");
 }

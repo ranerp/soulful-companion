@@ -7,7 +7,8 @@ const CONF_FILE_PATH: &'static str = "resources/conf.yaml";
 
 #[derive(Debug, PartialEq, Serialize, Deserialize)]
 pub struct TimerConfig {
-    pub run_duration: u32,
+    pub run_duration_min: u32,
+    pub update_frequency_sec: u32,
     pub start_activity_percent: f32,
 }
 
@@ -27,7 +28,8 @@ impl Config {
     fn default() -> Config {
         Config {
             timer: TimerConfig {
-                run_duration: 60,
+                run_duration_min: 60,
+                update_frequency_sec: 10,
                 start_activity_percent: 0.05
             },
             color: ColorConfig {

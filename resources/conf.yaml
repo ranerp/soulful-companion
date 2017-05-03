@@ -1,5 +1,6 @@
 timer:
-  run_duration: 60
+  run_duration_min: 60
+  update_frequency_sec: 10
   start_activity_percent: 0.05
 color: 
   start: 

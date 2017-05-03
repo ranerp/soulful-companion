@@ -1,32 +1,33 @@
 use timer::Timer;
 use timer::Guard;
 use chrono::Duration;
-use std::thread;
 
 pub struct ActionTimer {
-    timer: Timer,
-    guard: Guard,
+    timer: Option<Timer>,
+    guard: Option<Guard>,
 }
 
 impl ActionTimer {
-    pub fn new(timer: Timer, guard: Guard) -> ActionTimer {
+    pub fn new(timer: Timer) -> ActionTimer {
         ActionTimer {
-            timer: timer,
-            guard: guard,
+            timer: Some(timer),
+            guard: None,
         }
     }
 
-    pub fn schedule() {
-        let timer = Timer::new();
-        let guard = timer.schedule_repeating(Duration::seconds(2), print);
+    pub fn schedule<F>(&mut self, cb: F)
+        where F: 'static  + FnMut() + Send {
+        match self.guard {
+            Some(ref g) => drop(g),
+            None => (),
+        }
 
-        thread::sleep(::std::time::Duration::new(10, 0));
-
-        drop(guard);
+        match self.timer {
+            Some(ref t) => {
+                self.guard = Some(t.schedule_repeating(Duration::seconds(2), cb));
+            },
+            None => (),
+        }
     }
-}
-
-fn print() {
-    println!("{}", "action!");
 }
 
