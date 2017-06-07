@@ -1,9 +1,15 @@
 extern crate chrono;
 extern crate soulful_companion;
+extern crate uuid;
 //use soulful_companion::color::color_converter;
 //use soulful_companion::color::rgb::Rgb;
 //use soulful_companion::config::config;
-use soulful_companion::schedule::scheduler;
+use soulful_companion::schedule::scheduler::Scheduler;
+use soulful_companion::schedule::scheduler::Job;
+use soulful_companion::schedule::scheduler::ThreadSafeCallback;
+
+use uuid::Uuid;
+use chrono::prelude::*;
 
 use std::thread;
 use std::time::Duration;
@@ -24,10 +30,41 @@ fn main() {
     //println!("{:?}", hsl3);
     //println!("{:?}", rgb);
 
-    let mut scheduler = scheduler::Scheduler::new();
-    scheduler.start();
+    let scheduler = Scheduler::new();
 
+    let job = Job {
+        id: Uuid::new_v4(),
+        cb: ThreadSafeCallback::new(|| {
+            println!("job1");
+        }),
+        time: UTC::now(),
+    };
 
+    thread::sleep(Duration::from_secs(1));
 
-    thread::sleep(Duration::from_secs(10));
+    let job2 = Job {
+        id: Uuid::new_v4(),
+        cb: ThreadSafeCallback::new(|| {
+            println!("job2");
+        }),
+        time: UTC::now(),
+    };
+
+    thread::sleep(Duration::from_secs(1));
+
+    let job3 = Job {
+        id: Uuid::new_v4(),
+        cb: ThreadSafeCallback::new(|| {
+            println!("job3");
+        }),
+        time: UTC::now(),
+    };
+
+    scheduler.schedule(job.clone());
+    scheduler.schedule(job2.clone());
+    scheduler.schedule(job3.clone());
+
+    println!("{:?}", job.id);
+
+    thread::sleep(Duration::from_secs(5));
 }
