@@ -3,10 +3,10 @@ use std::cmp::{PartialEq, PartialOrd, Eq, Ord, Ordering};
 use std::thread;
 use std::sync::{Arc, Mutex};
 use std::sync::mpsc::{self, Sender};
+use std::time::Duration;
+
 use uuid::Uuid;
-
 use chrono::prelude::*;
-
 use chrono::DateTime;
 
 #[derive(Debug)]
@@ -151,10 +151,12 @@ impl Scheduler<Message> {
                     }
 
                     match manager.jobs.pop() {
-                        None => println!("Could not call job"),
                         Some(job) => { job.cb.call(); },
+                        None => panic!("Jobs heap should not be empty at this point"),
                     }
                 }
+
+                thread::sleep(Duration::from_millis(1));
             }
         });
 
