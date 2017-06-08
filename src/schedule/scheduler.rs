@@ -1,9 +1,11 @@
 use std::collections::BinaryHeap;
+use std::collections::HashSet;
 use std::cmp::{PartialEq, PartialOrd, Eq, Ord, Ordering};
 use std::thread;
 use std::sync::{Arc, Mutex};
 use std::sync::mpsc::{self, Sender};
 use std::time::Duration;
+use std::hash::{Hash, Hasher};
 
 use uuid::Uuid;
 use chrono::prelude::*;
@@ -11,8 +13,9 @@ use chrono::DateTime;
 
 #[derive(Debug)]
 enum CommandType {
-    SCHEDULE,
-    CANCEL,
+    SchedulePeriodic,
+    ScheduleOnce,
+    Cancel,
 }
 
 #[derive(Clone)]
@@ -37,9 +40,38 @@ impl ThreadSafeCallback {
 
 #[derive(Clone)]
 pub struct Job {
-    pub id: Uuid,
-    pub cb: ThreadSafeCallback,
-    pub time: DateTime<UTC>,
+    id: Uuid,
+    cb: ThreadSafeCallback,
+    time: DateTime<UTC>,
+    period_ms: Option<u64>,
+}
+
+impl Job {
+    pub fn new_once(id: Uuid, cb: ThreadSafeCallback, time: DateTime<UTC>) -> Job {
+        Job {
+            id: id,
+            cb: cb,
+            time: time,
+            period_ms: None,
+        }
+    }
+
+    pub fn new_periodic(id: Uuid, cb: ThreadSafeCallback, first_time: DateTime<UTC>, period_ms: u64) -> Job {
+        Job {
+            id: id,
+            cb: cb,
+            time: first_time,
+            period_ms: Some(period_ms),
+        }
+    }
+}
+
+impl Hash for Job {
+    fn hash<H: Hasher>(&self, state: &mut H) {
+        self.id.hash(state);
+        self.time.hash(state);
+        self.period_ms.hash(state);
+    }
 }
 
 impl PartialOrd for Job {
@@ -68,33 +100,51 @@ struct Message {
 }
 
 struct Manager {
-    jobs: BinaryHeap<Job>,
+    one_time_jobs: BinaryHeap<Job>,
+    periodic_jobs: HashSet<Job>,
 }
 
 impl Manager {
 
     pub fn new() -> Manager {
         Manager {
-            jobs: BinaryHeap::new(),
+            one_time_jobs: BinaryHeap::new(),
+            periodic_jobs: HashSet::new(),
         }
     }
 
-    fn schedule(&mut self, job: Job) {
-        self.jobs.push(job);
+    fn schedule_once(&mut self, job: Job) {
+        self.one_time_jobs.push(job);
     }
 
-    fn cancel(&mut self, cancel_job: Job) {
+    fn schedule_periodic(&mut self, job: Job) {
+        self.periodic_jobs.insert(job);
+    }
+
+    fn cancel(&mut self, job: Job) {
+        if self.periodic_jobs.contains(&job) {
+            self.cancel_periodic_job(job);
+        } else {
+            self.cancel_one_time_job(job);
+        }
+    }
+
+    fn cancel_periodic_job(&mut self, job: Job) {
+        self.periodic_jobs.remove(&job);
+    }
+
+    fn cancel_one_time_job(&mut self, job: Job) {
         let mut tmp = BinaryHeap::new();
 
-        while let Some(job) = self.jobs.pop() {
-            if job == cancel_job {
+        while let Some(j) = self.one_time_jobs.pop() {
+            if j == job {
                 break;
             }
 
-            tmp.push(job);
+            tmp.push(j);
         }
 
-        self.jobs.append(&mut tmp);
+        self.one_time_jobs.append(&mut tmp);
     }
 }
 
@@ -109,16 +159,16 @@ impl Scheduler<Message> {
         }
     }
 
-    pub fn schedule(&self, job: Job) {
+    pub fn schedule_once(&self, job: Job) {
         self.tx.send(Message {
-            command: CommandType::SCHEDULE,
+            command: CommandType::ScheduleOnce,
             job: job,
         }).unwrap();
     }
 
     pub fn cancel(&self, job: Job) {
         self.tx.send(Message {
-            command: CommandType::CANCEL,
+            command: CommandType::Cancel,
             job: job,
         }).unwrap();
     }
@@ -133,15 +183,24 @@ impl Scheduler<Message> {
                 match rx.try_recv() {
                 Ok(msg) => {
                         match msg.command {
-                            CommandType::SCHEDULE => manager.schedule(msg.job),
-                            CommandType::CANCEL => manager.cancel(msg.job),
+                            CommandType::ScheduleOnce => manager.schedule_once(msg.job),
+                            CommandType::SchedulePeriodic => manager.schedule_periodic(msg.job),
+                            CommandType::Cancel => manager.cancel(msg.job),
                         }
                     }
                     Err(_) => (),
                 }
 
+                for job in manager.periodic_jobs.iter() {
+                    if job.time.cmp(&UTC::now()) == Ordering::Greater {
+                        continue;
+                    }
+
+                    job.cb.call();
+                }
+
                 loop {
-                    let cmp = match manager.jobs.peek() {
+                    let cmp = match manager.one_time_jobs.peek() {
                         Some(job) => job.time.cmp(&UTC::now()),
                         None => break,
                     };
@@ -150,7 +209,7 @@ impl Scheduler<Message> {
                         break;
                     }
 
-                    match manager.jobs.pop() {
+                    match manager.one_time_jobs.pop() {
                         Some(job) => { job.cb.call(); },
                         None => panic!("Jobs heap should not be empty at this point"),
                     }
