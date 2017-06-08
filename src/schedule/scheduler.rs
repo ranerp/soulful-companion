@@ -1,5 +1,4 @@
 use std::collections::BinaryHeap;
-use std::collections::HashSet;
 use std::cmp::{PartialEq, PartialOrd, Eq, Ord, Ordering};
 use std::thread;
 use std::sync::{Arc, Mutex};
@@ -10,6 +9,7 @@ use std::hash::{Hash, Hasher};
 use uuid::Uuid;
 use chrono::prelude::*;
 use chrono::DateTime;
+use chrono::Duration as CDuration;
 
 #[derive(Debug)]
 enum CommandType {
@@ -101,7 +101,7 @@ struct Message {
 
 struct Manager {
     one_time_jobs: BinaryHeap<Job>,
-    periodic_jobs: HashSet<Job>,
+    periodic_jobs: Vec<Job>,
 }
 
 impl Manager {
@@ -109,7 +109,7 @@ impl Manager {
     pub fn new() -> Manager {
         Manager {
             one_time_jobs: BinaryHeap::new(),
-            periodic_jobs: HashSet::new(),
+            periodic_jobs: Vec::new(),
         }
     }
 
@@ -118,7 +118,7 @@ impl Manager {
     }
 
     fn schedule_periodic(&mut self, job: Job) {
-        self.periodic_jobs.insert(job);
+        self.periodic_jobs.push(job);
     }
 
     fn cancel(&mut self, job: Job) {
@@ -129,8 +129,20 @@ impl Manager {
         }
     }
 
+    // TODO Replace with better data structure!
     fn cancel_periodic_job(&mut self, job: Job) {
-        self.periodic_jobs.remove(&job);
+        let mut index: Option<usize> = None;
+        for (i, look) in self.periodic_jobs.iter().enumerate() {
+            if *look == job {
+                index = Some(i);
+                break;
+            }
+        }
+
+        match index {
+            Some(i) => { self.periodic_jobs.remove(i); },
+            None => println!("Could not remove job"),
+        }
     }
 
     fn cancel_one_time_job(&mut self, job: Job) {
@@ -166,6 +178,13 @@ impl Scheduler<Message> {
         }).unwrap();
     }
 
+    pub fn schedule_periodic(&self, job: Job) {
+        self.tx.send(Message {
+            command: CommandType::SchedulePeriodic,
+            job: job,
+        }).unwrap();
+    }
+
     pub fn cancel(&self, job: Job) {
         self.tx.send(Message {
             command: CommandType::Cancel,
@@ -191,12 +210,13 @@ impl Scheduler<Message> {
                     Err(_) => (),
                 }
 
-                for job in manager.periodic_jobs.iter() {
+                for mut job in manager.periodic_jobs.iter_mut() {
                     if job.time.cmp(&UTC::now()) == Ordering::Greater {
                         continue;
                     }
 
                     job.cb.call();
+                    job.time = UTC::now().checked_add_signed(CDuration::milliseconds(job.period_ms.unwrap() as i64)).unwrap();
                 }
 
                 loop {
