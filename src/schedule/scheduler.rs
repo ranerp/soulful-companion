@@ -43,7 +43,7 @@ pub struct Job {
     id: Uuid,
     cb: ThreadSafeCallback,
     time: DateTime<UTC>,
-    finish: Option<DateTime<UTC>>,
+    end: Option<DateTime<UTC>>,
     period_ms: Option<u64>,
 }
 
@@ -53,7 +53,7 @@ impl Job {
             id: id,
             cb: cb,
             time: time,
-            finish: None,
+            end: None,
             period_ms: None,
         }
     }
@@ -63,7 +63,7 @@ impl Job {
             id: id,
             cb: cb,
             time: first_time,
-            finish: Some(finish_time),
+            end: Some(finish_time),
             period_ms: Some(period_ms),
         }
     }
@@ -161,6 +161,54 @@ impl Manager {
 
         self.one_time_jobs.append(&mut tmp);
     }
+
+    fn cancel_over_period_jobs(&mut self) {
+        let mut rm_idx = Vec::new();
+
+        for (i, job) in self.periodic_jobs.iter().enumerate() {
+            match job.end {
+                Some(end) => {
+                    if UTC::now().cmp(&end) == Ordering::Greater {
+                        rm_idx.push(i);
+                    }
+                }
+                None => (),
+            }
+        }
+
+        for i in rm_idx.iter() {
+            self.periodic_jobs.remove(*i);
+        }
+    }
+
+    fn call_periodic_jobs(&mut self) {
+        for mut job in self.periodic_jobs.iter_mut() {
+            if job.time.cmp(&UTC::now()) == Ordering::Greater {
+                continue;
+            }
+
+            job.cb.call();
+            job.time = UTC::now().checked_add_signed(CDuration::milliseconds(job.period_ms.unwrap() as i64)).unwrap();
+        }
+    }
+
+    fn call_one_time_jobs(&mut self) {
+        loop {
+            let cmp = match self.one_time_jobs.peek() {
+                Some(job) => job.time.cmp(&UTC::now()),
+                None => break,
+            };
+
+            if cmp == Ordering::Greater {
+                break;
+            }
+
+            match self.one_time_jobs.pop() {
+                Some(mut job) => { job.cb.call(); },
+                None => panic!("Jobs heap should not be empty at this point"),
+            }
+        }
+    }
 }
 
 pub struct Scheduler<T> {
@@ -213,30 +261,10 @@ impl Scheduler<Message> {
                     Err(_) => (),
                 }
 
-                for mut job in manager.periodic_jobs.iter_mut() {
-                    if job.time.cmp(&UTC::now()) == Ordering::Greater {
-                        continue;
-                    }
+                manager.cancel_over_period_jobs();
 
-                    job.cb.call();
-                    job.time = UTC::now().checked_add_signed(CDuration::milliseconds(job.period_ms.unwrap() as i64)).unwrap();
-                }
-
-                loop {
-                    let cmp = match manager.one_time_jobs.peek() {
-                        Some(job) => job.time.cmp(&UTC::now()),
-                        None => break,
-                    };
-
-                    if cmp == Ordering::Greater {
-                        break;
-                    }
-
-                    match manager.one_time_jobs.pop() {
-                        Some(mut job) => { job.cb.call(); },
-                        None => panic!("Jobs heap should not be empty at this point"),
-                    }
-                }
+                manager.call_periodic_jobs();
+                manager.call_one_time_jobs();
 
                 thread::sleep(Duration::from_millis(1));
             }
