@@ -43,6 +43,7 @@ pub struct Job {
     id: Uuid,
     cb: ThreadSafeCallback,
     time: DateTime<UTC>,
+    finish: Option<DateTime<UTC>>,
     period_ms: Option<u64>,
 }
 
@@ -52,15 +53,17 @@ impl Job {
             id: id,
             cb: cb,
             time: time,
+            finish: None,
             period_ms: None,
         }
     }
 
-    pub fn new_periodic(id: Uuid, cb: ThreadSafeCallback, first_time: DateTime<UTC>, period_ms: u64) -> Job {
+    pub fn new_periodic(id: Uuid, cb: ThreadSafeCallback, first_time: DateTime<UTC>, finish_time: DateTime<UTC>, period_ms: u64) -> Job {
         Job {
             id: id,
             cb: cb,
             time: first_time,
+            finish: Some(finish_time),
             period_ms: Some(period_ms),
         }
     }
@@ -200,7 +203,7 @@ impl Scheduler<Message> {
 
             loop {
                 match rx.try_recv() {
-                Ok(msg) => {
+                    Ok(msg) => {
                         match msg.command {
                             CommandType::ScheduleOnce => manager.schedule_once(msg.job),
                             CommandType::SchedulePeriodic => manager.schedule_periodic(msg.job),

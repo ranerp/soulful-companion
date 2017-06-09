@@ -1,4 +1,6 @@
 pub mod io;
+pub use self::io::load_file_to_str;
+pub use self::io::save_str_to_file;
 
 use std::io as std_io;
 use std::error;
