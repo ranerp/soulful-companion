@@ -5,23 +5,40 @@ use serde_yaml;
 
 const CONF_FILE_PATH: &'static str = "resources/conf.yaml";
 
-#[derive(Debug, PartialEq, Serialize, Deserialize)]
+#[derive(Debug, PartialEq, Serialize, Deserialize, Clone)]
 pub struct TimerConfig {
-    pub run_duration_min: u32,
-    pub update_frequency_sec: u32,
-    pub start_activity_percent: f32,
+    run_duration_min: u32,
+    update_frequency_sec: u32,
+    start_activity_percent: f32,
 }
 
-#[derive(Debug, PartialEq, Serialize, Deserialize)]
+impl TimerConfig {
+    pub fn run_duration_min(&mut self) -> u32 { self.run_duration_min }
+    pub fn update_frequency_sec(&mut self) -> u32 { self.update_frequency_sec }
+    pub fn update_frequency_ms(&mut self) -> f32 { self.update_frequency_sec() as f32 * 1_000.0 }
+    pub fn start_activity_percent(&mut self) -> f32 { self.start_activity_percent }
+}
+
+#[derive(Debug, PartialEq, Serialize, Deserialize, Clone)]
 pub struct ColorConfig {
-    pub start: Rgb,
-    pub end: Rgb,
+    start: Rgb,
+    end: Rgb,
 }
 
-#[derive(Debug, PartialEq, Serialize, Deserialize)]
+impl ColorConfig {
+    pub fn start(&mut self) -> &mut Rgb { &mut self.start }
+    pub fn end(&mut self) -> &mut Rgb { &mut self.end }
+}
+
+#[derive(Debug, PartialEq, Serialize, Deserialize, Clone)]
 pub struct Config {
-    pub timer: TimerConfig,
-    pub color: ColorConfig,
+    timer: TimerConfig,
+    color: ColorConfig,
+}
+
+impl Config {
+    pub fn timer(&mut self) -> &mut TimerConfig { &mut self.timer }
+    pub fn color(&mut self) -> &mut ColorConfig { &mut self.color }
 }
 
 impl Config {
@@ -37,6 +54,10 @@ impl Config {
                 end: Rgb::new(0, 0, 0),
             }
         }
+    }
+
+    pub fn activity_duration_sec(&mut self) -> f32 {
+        self.timer.run_duration_min as f32 * self.timer.start_activity_percent * 60.0
     }
 }
 
