@@ -31,10 +31,10 @@ impl ThreadSafeCallback {
         }
     }
 
-    fn call(&self) {
+    fn call(&mut self) {
         let cb = self.cb.clone();
         let cb = cb.lock().unwrap();
-        (cb)()
+        cb();
     }
 }
 
@@ -233,7 +233,7 @@ impl Scheduler<Message> {
                     }
 
                     match manager.one_time_jobs.pop() {
-                        Some(job) => { job.cb.call(); },
+                        Some(mut job) => { job.cb.call(); },
                         None => panic!("Jobs heap should not be empty at this point"),
                     }
                 }

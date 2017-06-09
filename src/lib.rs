@@ -8,3 +8,4 @@ pub mod schedule;
 pub mod color;
 pub mod config;
 pub mod io;
+pub mod led;
