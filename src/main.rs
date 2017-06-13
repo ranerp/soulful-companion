@@ -7,6 +7,7 @@ use soulful_companion::schedule::Scheduler;
 use soulful_companion::schedule::Job;
 use soulful_companion::schedule::ThreadSafeCallback;
 use soulful_companion::led::ColorModifier;
+use soulful_companion::led::Controller;
 
 use std::thread;
 use std::sync::{Arc, Mutex};
@@ -38,6 +39,9 @@ fn main() {
         config.timer().update_frequency_ms() as u64);
 
     scheduler.schedule_periodic(job);
+
+    let controller = Controller::new();
+    controller.test();
 
     thread::sleep(Duration::from_secs(60));
 }
