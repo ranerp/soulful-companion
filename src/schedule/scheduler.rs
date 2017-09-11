@@ -12,7 +12,7 @@ use chrono::DateTime;
 use chrono::Duration as CDuration;
 
 #[derive(Debug)]
-enum CommandType {
+pub enum CommandType {
     SchedulePeriodic,
     ScheduleOnce,
     Cancel,
@@ -97,7 +97,7 @@ impl PartialEq for Job {
 
 impl Eq for Job {}
 
-struct Message {
+pub struct Message {
     pub command: CommandType,
     pub job: Job,
 }
