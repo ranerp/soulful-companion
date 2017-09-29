@@ -91,18 +91,18 @@ impl Controller {
     }
 
     // TODO Find out proper shifting without exceeding the type's number of bits and fix it!
-    pub fn set_pwm(&mut self, channel: u8, on: u8, off: u8) {
-        self.dev.smbus_write_byte_data(LED0_ON_L + 4 * channel, on & 0xFF).unwrap();
-        self.dev.smbus_write_byte_data(LED0_ON_H + 4 * channel, on >> 8).unwrap();
-        self.dev.smbus_write_byte_data(LED0_OFF_L + 4 * channel, off & 0xFF).unwrap();
-        self.dev.smbus_write_byte_data(LED0_OFF_H + 4 * channel, off >> 7).unwrap();
+    pub fn set_pwm(&mut self, channel: u8, on: u16, off: u16) {
+        self.dev.smbus_write_word_data(LED0_ON_L + 4 * channel, on).unwrap();
+        self.dev.smbus_write_word_data(LED0_ON_H + 4 * channel, on >> 8).unwrap();
+        self.dev.smbus_write_word_data(LED0_OFF_L + 4 * channel, off).unwrap();
+        self.dev.smbus_write_word_data(LED0_OFF_H + 4 * channel, off >> 8).unwrap();
     }
 
     // TODO Find out proper shifting without exceeding the type's number of bits and fix it!
-    fn set_all_pwm(&mut self, on: u8, off: u8) {
-        self.dev.smbus_write_byte_data(ALL_LED_ON_L, on & 0xFF).unwrap();
-        self.dev.smbus_write_byte_data(ALL_LED_ON_H, on >> 7).unwrap();
-        self.dev.smbus_write_byte_data(ALL_LED_OFF_L, off & 0xFF).unwrap();
-        self.dev.smbus_write_byte_data(ALL_LED_OFF_H, off >> 7).unwrap();
+    fn set_all_pwm(&mut self, on: u16, off: u16) {
+        self.dev.smbus_write_word_data(ALL_LED_ON_L, on).unwrap();
+        self.dev.smbus_write_word_data(ALL_LED_ON_H, on >> 8).unwrap();
+        self.dev.smbus_write_word_data(ALL_LED_OFF_L, off).unwrap();
+        self.dev.smbus_write_word_data(ALL_LED_OFF_H, off >> 8).unwrap();
     }
 }

@@ -40,7 +40,9 @@ fn main() {
             let mut controller = controller.lock().unwrap();
             color_modifier.interp_by_time_elapsed();
 
-            controller.set_pwm(0, color_modifier.at_color.b as u8, 0);
+            let val = (color_modifier.at_color.b as f64 / 255_f64 * 4096_f64) as u16;
+
+            controller.set_pwm(0, 4096 - val, val);
 
             println!("{:?}", UTC::now());
         }),
@@ -50,5 +52,5 @@ fn main() {
 
     scheduler.schedule_periodic(job);
 
-    thread::sleep(Duration::from_secs(10));
+    thread::sleep(Duration::from_secs(60));
 }
