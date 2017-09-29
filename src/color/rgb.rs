@@ -9,11 +9,7 @@ pub struct Rgb {
 
 impl Rgb {
     pub fn new(r: u8, g: u8, b: u8) -> Rgb {
-        Rgb {
-            r: r,
-            g: g,
-            b: b,
-        }
+        Rgb { r, g, b, }
     }
 
     pub fn mul_all(mut self, multiplier: f32) {

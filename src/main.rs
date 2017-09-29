@@ -25,13 +25,23 @@ fn main() {
     let end_time = start_time.checked_add_signed(CDuration::seconds(config.activity_duration_sec() as i64)).unwrap();
     let color_modifier = Arc::new(Mutex::new(ColorModifier::new(config.color().start().clone(), config.color().end().clone(), start_time, end_time)));
 
+    let mut controller = Controller::new();
+    controller.set_pwm_freq(60_f64);
+
+    let controller = Arc::new(Mutex::new(controller));
+
     let job = Job::new_periodic(
         Uuid::new_v4(),
         ThreadSafeCallback::new(move || {
             let color_modifier = color_modifier.clone();
             let mut color_modifier = color_modifier.lock().unwrap();
 
+            let controller = controller.clone();
+            let mut controller = controller.lock().unwrap();
             color_modifier.interp_by_time_elapsed();
+
+            controller.set_pwm(0, color_modifier.at_color.b as u8, 0);
+
             println!("{:?}", UTC::now());
         }),
         start_time,
@@ -40,8 +50,5 @@ fn main() {
 
     scheduler.schedule_periodic(job);
 
-    let controller = Controller::new();
-    controller.test();
-
-    thread::sleep(Duration::from_secs(60));
+    thread::sleep(Duration::from_secs(10));
 }

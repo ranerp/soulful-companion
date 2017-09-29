@@ -10,7 +10,7 @@ use color::hsl_to_rgb;
 pub struct ColorModifier {
     start_color: Rgb,
     end_color: Rgb,
-    at_color: Rgb,
+    pub at_color: Rgb,
     start_time: DateTime<UTC>,
     end_time: DateTime<UTC>,
 }
