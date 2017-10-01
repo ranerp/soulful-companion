@@ -22,6 +22,7 @@ fn main() {
     let scheduler = Scheduler::new();
 
     let start_time = UTC::now();
+    println!("{}", config.activity_duration_sec());
     let end_time = start_time.checked_add_signed(CDuration::seconds(config.activity_duration_sec() as i64)).unwrap();
     let color_modifier = Arc::new(Mutex::new(ColorModifier::new(config.color().start().clone(), config.color().end().clone(), start_time, end_time)));
 
@@ -40,9 +41,14 @@ fn main() {
             let mut controller = controller.lock().unwrap();
             color_modifier.interp_by_time_elapsed();
 
-            let val = (color_modifier.at_color.b as f64 / 255_f64 * 4096_f64) as u16;
+            let r = (color_modifier.at_color.r as f64 / 255_f64 * 4096_f64) as u16;
+            let g = (color_modifier.at_color.g as f64 / 255_f64 * 4096_f64) as u16;
+            let b = (color_modifier.at_color.b as f64 / 255_f64 * 4096_f64) as u16;
 
-            controller.set_pwm(0, 4096 - val, val);
+
+            controller.set_pwm(0, 0, r);
+            controller.set_pwm(1, 0, g);
+            controller.set_pwm(2, 0, b);
 
             println!("{:?}", UTC::now());
         }),
@@ -52,5 +58,5 @@ fn main() {
 
     scheduler.schedule_periodic(job);
 
-    thread::sleep(Duration::from_secs(60));
+    thread::sleep(Duration::from_secs(25));
 }

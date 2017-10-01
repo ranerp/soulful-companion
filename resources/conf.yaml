@@ -1,13 +1,13 @@
 timer:
-  run_duration_min: 1
-  update_frequency_sec: 1
+  run_duration_sec: 20
+  update_frequency_ms: 100
   start_activity_percent: 0.84
 color: 
   start: 
-    r: 255
-    g: 255
-    b: 255
+    r: 6
+    g: 23
+    b: 175
   end: 
-    r: 0
-    g: 100
-    b: 0
+    r: 175
+    g: 6
+    b: 6

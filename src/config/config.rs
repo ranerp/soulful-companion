@@ -7,15 +7,14 @@ const CONF_FILE_PATH: &'static str = "resources/conf.yaml";
 
 #[derive(Debug, PartialEq, Serialize, Deserialize, Clone)]
 pub struct TimerConfig {
-    run_duration_min: u32,
-    update_frequency_sec: u32,
+    run_duration_sec: u32,
+    update_frequency_ms: u32,
     start_activity_percent: f32,
 }
 
 impl TimerConfig {
-    pub fn run_duration_min(&mut self) -> u32 { self.run_duration_min }
-    pub fn update_frequency_sec(&mut self) -> u32 { self.update_frequency_sec }
-    pub fn update_frequency_ms(&mut self) -> f32 { self.update_frequency_sec() as f32 * 1_000.0 }
+    pub fn run_duration_sec(&mut self) -> u32 { self.run_duration_sec }
+    pub fn update_frequency_ms(&mut self) -> u32 { self.update_frequency_ms }
     pub fn start_activity_percent(&mut self) -> f32 { self.start_activity_percent }
 }
 
@@ -45,8 +44,8 @@ impl Config {
     fn default() -> Config {
         Config {
             timer: TimerConfig {
-                run_duration_min: 60,
-                update_frequency_sec: 10,
+                run_duration_sec: 60,
+                update_frequency_ms: 10,
                 start_activity_percent: 0.05
             },
             color: ColorConfig {
@@ -57,7 +56,7 @@ impl Config {
     }
 
     pub fn activity_duration_sec(&mut self) -> f32 {
-        self.timer.run_duration_min as f32 * self.timer.start_activity_percent * 60.0
+        self.timer.run_duration_sec as f32 * self.timer.start_activity_percent
     }
 }
 
