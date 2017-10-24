@@ -10,3 +10,4 @@ pub mod color;
 pub mod config;
 pub mod io;
 pub mod led;
+pub mod berry_imu;
