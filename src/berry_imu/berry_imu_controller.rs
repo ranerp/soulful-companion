@@ -90,6 +90,19 @@ const TIME_LIMIT: u8 = 0x3B;
 const TIME_LATENCY: u8 = 0x3C;
 const TIME_WINDOW: u8 = 0x3D;
 
+const IMU_UPSIDE_DOWN: f64 = 0;         // Change calculations depending on IMu orientation.
+                                        // 0 = Correct side up. This is when the skull logo is facing down
+                                        // 1 = Upside down. This is when the skull logo is facing up
+
+const RAD_TO_DEG: f64 = 57.29576;
+const M_PI: f64 = std::f64::consts:PI;
+const G_GAIN: f64 = 0.070;  	        //[deg/s/LSB]  If you change the dps for gyro, you need to update this value accordingly
+const AA: f64 =  0.40;      	        //Complementary filter constant
+const MAG_LPF_FACTOR: f64 = 0.4;        //Low pass filter constant magnetometer
+const ACC_LPF_FACTOR: f64 = 0.4;        //Low pass filter constant for accelerometer
+const ACC_MEDIAN_TABLE_SIZE: f64 = 9;   //Median filter table size for accelerometer. Higher = smoother but a longer delay
+const MAG_MEDIAN_TABLE_SIZE: f64 = 9;   //Median filter table size for magnetometer. Higher = smoother but a longer delay
+
 pub struct BerryIMUController {
     dev: LinuxI2CDevice
 }
